@@ -27,15 +27,51 @@ $.fn.dataTableExt.oPagination.listbox = {
 		var nInput = document.createElement('select');
 		var nPage = document.createElement('span');
 		var nOf = document.createElement('span');
+
+        var listBoxOptions = {
+           buttons: false,
+           selectPrependText: "Paging ",
+           selectAppendText: " &nbsp; of &nbsp; __PAGE_TOTAL__",
+            // to allow css styles to hide the arrow
+           selectWrapper: false
+        }
+        $.extend(listBoxOptions, oSettings.oInit.oPlugins.listBox);
+
+        // next and previous buttons
+        if(listBoxOptions.buttons){
+            var nextBtn = document.createElement('a');
+            nextBtn.className = 'paginate_button next';
+            var prevBtn = document.createElement('a');
+            prevBtn.className = 'paginate_button previous';
+        }
+
 		nOf.className = "paginate_of";
 		nPage.className = "paginate_page";
 		if (oSettings.sTableId !== '') {
 			nPaging.setAttribute('id', oSettings.sTableId + '_paginate');
 		}
 		nInput.style.display = "inline";
-		nPage.innerHTML = "Page ";
+        nPage.innerHTML = listBoxOptions.selectPrependText;
 		nPaging.appendChild(nPage);
 		nPaging.appendChild(nInput);
+        if(listBoxOptions.selectWrapper){
+            $(nInput).wrap('<div class="styleSelect"></div>');
+        }
+
+        if(listBoxOptions.buttons){
+            // previous and next buttons
+            $(nPaging).prepend(prevBtn);
+            $(nPaging).append(nextBtn);
+            $(nextBtn).on('click',function(e){
+                oSettings.oApi._fnPageChange( oSettings, "next" );
+                fnCallbackDraw( oSettings );
+            });
+            $(prevBtn).on('click',function(e){
+                oSettings.oApi._fnPageChange( oSettings, "previous" );
+                fnCallbackDraw( oSettings );
+            })
+        }
+
 		nPaging.appendChild(nOf);
 		$(nInput).change(function (e) { // Set DataTables page property and redraw the grid on listbox change event.
 			window.scroll(0,0); //scroll to top of page
@@ -89,7 +125,7 @@ $.fn.dataTableExt.oPagination.listbox = {
 						elSel.add(oOption); // IE only
 					}
 				}
-				spans[1].innerHTML = "&nbsp;of&nbsp;" + iPages;
+                spans[1].innerHTML = oSettings.oInit.oPlugins.listBox.selectAppendText.replace('__PAGE_TOTAL__', iPages);
 			}
 		  elSel.value = iCurrentPage;
 		}
